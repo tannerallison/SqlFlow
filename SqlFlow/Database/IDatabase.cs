@@ -6,6 +6,13 @@ namespace SqlFlow;
 public interface IDatabase
 {
     /// <summary>
+    /// Returns a new IDatabase object for the same server with the given database name.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public IDatabase GetObjectForDatabaseNamed(string name);
+
+    /// <summary>
     /// Execute a command against the database.
     /// </summary>
     /// <param name="query"></param>

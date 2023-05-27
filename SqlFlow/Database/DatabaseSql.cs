@@ -14,6 +14,13 @@ public class DatabaseSql : IDatabase
         _connectionString = connectionString;
     }
 
+    public IDatabase GetObjectForDatabaseNamed(string name)
+    {
+        var builder = new SqlConnectionStringBuilder(_connectionString);
+        builder.InitialCatalog = name;
+        return new DatabaseSql(builder.ToString());
+    }
+
     public RunResult ExecuteCommand(string query, QueryOptions? options = null)
     {
         options ??= new QueryOptions();
@@ -24,42 +31,53 @@ public class DatabaseSql : IDatabase
         var queries = SqlScriptParser.ParseScript(query);
         ParsedSqlQuery? mostRecentQuery = null;
 
-        foreach (ParsedSqlQuery queryItem in queries)
+        try
         {
-            mostRecentQuery = queryItem;
+            if (options.IsTestRun)
+                new SqlCommand("SET PARSEONLY ON", connection).ExecuteNonQuery();
+
+            foreach (ParsedSqlQuery queryItem in queries)
+            {
+                mostRecentQuery = queryItem;
+
+                if (options.Worker?.CancellationPending ?? false)
+                    break;
+
+                using var command = SetUpCommand(connection, queryItem.Query, options.Timeout);
+                try
+                {
+                    command.ExecuteNonQuery();
+                    if (options.IsTransactional && transaction?.Connection == null)
+                        return new RunResult(false,
+                            $"Query was rolled back on in the query that starts on line {queryItem.LineNumber}\r\n",
+                            queryItem.LineNumber);
+                }
+                catch (SqlException sqlException)
+                {
+                    return TryRollbackTransaction(transaction, mostRecentQuery.LineNumber, new RunResult(false,
+                        "Error executing query",
+                        queryItem.LineNumber + sqlException.LineNumber, sqlException));
+                }
+            }
 
             if (options.Worker?.CancellationPending ?? false)
-                break;
+            {
+                return TryRollbackTransaction(transaction, mostRecentQuery?.LineNumber,
+                    new RunResult(false, "Query cancelled", mostRecentQuery?.LineNumber));
+            }
 
-            using var command = SetUpCommand(connection, queryItem.Query, options.Timeout);
-            try
-            {
-                command.ExecuteNonQuery();
-                if (options.IsTransactional && transaction?.Connection == null)
-                    return new RunResult(false,
-                        $"Query was rolled back on in the query that starts on line {queryItem.LineNumber}\r\n",
-                        queryItem.LineNumber);
-            }
-            catch (SqlException sqlException)
-            {
-                return TryRollbackTransaction(transaction, mostRecentQuery.LineNumber, new RunResult(false,
-                    "Error executing query",
-                    queryItem.LineNumber + sqlException.LineNumber, sqlException));
-            }
+            if (options.IsTransactional && transaction?.Connection == null)
+                return new RunResult(false, "Query was rolled back.");
+
+            transaction?.Commit();
+
+            return new RunResult(true, "Query executed successfully");
         }
-
-        if (options.Worker?.CancellationPending ?? false)
+        finally
         {
-            return TryRollbackTransaction(transaction, mostRecentQuery?.LineNumber,
-                new RunResult(false, "Query cancelled", mostRecentQuery?.LineNumber));
+            if (options.IsTestRun)
+                new SqlCommand("SET PARSEONLY OfF", connection).ExecuteNonQuery();
         }
-
-        if (options.IsTransactional && transaction?.Connection == null)
-            return new RunResult(false, "Query was rolled back.");
-
-        transaction?.Commit();
-
-        return new RunResult(true, "Query executed successfully");
     }
 
     public RunResult<DbDataReader> ExecuteQueryDataReader(string query, int? timeout = null)

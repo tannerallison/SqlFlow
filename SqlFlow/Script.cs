@@ -18,7 +18,7 @@ public class Script
     public string ScriptName { get; }
     public string ScriptPath { get; }
     public long OrderNumber { get; }
-    public string? DatabaseToUse { get; }
+    private string? DatabaseToUse { get; }
 
     public Script(string path, string name)
     {
@@ -45,6 +45,24 @@ public class Script
 
         Warning = LoadTag(@"\{\{Warn=(.+?)}}");
     }
+
+    public string GetReplacedText(ICollection<Variable> variables) => ReplaceVariables(ScriptText, variables);
+
+    private string ReplaceVariables(string value, ICollection<Variable> variables)
+    {
+        string ReplaceVariable(string current, Variable v) => current.Replace($"<<{v.Key}>>", v.Value);
+        return variables.Aggregate(value, ReplaceVariable);
+    }
+
+    public bool SpecifiesDatabase => DatabaseToUse != null;
+
+    public string? GetDatabaseToUse(ICollection<Variable> variables)
+    {
+        return DatabaseToUse == null
+            ? null
+            : ReplaceVariables(DatabaseToUse, variables);
+    }
+
 
     private List<string> LoadMultiTag(string regex, int grouping = 1)
     {
