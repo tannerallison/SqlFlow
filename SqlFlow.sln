@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlFlow.Windows", "SqlFlow.Windows\SqlFlow.Windows.csproj", "{00815418-2165-48B5-916B-86462E61812E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlFlow.Tests", "SqlFlow.Tests\SqlFlow.Tests.csproj", "{F643C6D6-1818-4A2C-A8DE-01883C5F5766}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlFlow", "SqlFlow\SqlFlow.csproj", "{A2FD0474-C2E2-4E21-83BE-CC3CA050EDE1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00815418-2165-48B5-916B-86462E61812E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00815418-2165-48B5-916B-86462E61812E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00815418-2165-48B5-916B-86462E61812E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00815418-2165-48B5-916B-86462E61812E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F643C6D6-1818-4A2C-A8DE-01883C5F5766}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F643C6D6-1818-4A2C-A8DE-01883C5F5766}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F643C6D6-1818-4A2C-A8DE-01883C5F5766}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F643C6D6-1818-4A2C-A8DE-01883C5F5766}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2FD0474-C2E2-4E21-83BE-CC3CA050EDE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2FD0474-C2E2-4E21-83BE-CC3CA050EDE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2FD0474-C2E2-4E21-83BE-CC3CA050EDE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2FD0474-C2E2-4E21-83BE-CC3CA050EDE1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
