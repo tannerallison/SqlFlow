@@ -4,7 +4,7 @@ namespace SqlFlow;
 
 public class Script
 {
-    public static readonly Regex ScriptRegex = new("^(_\\d+_)(.+).sql",
+    public static readonly Regex ScriptRegex = new("^_(\\d+)_(.+).sql",
         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
     public string ScriptText { get; }
@@ -20,17 +20,26 @@ public class Script
     public long OrderNumber { get; }
     private string? DatabaseToUse { get; }
 
-    public Script(string path, string name)
+    public static Script FromString(string scriptText, string path)
     {
+        return new Script(scriptText, path);
+    }
+
+    public Script(string path) : this(File.ReadAllText(path), path)
+    {
+    }
+
+    private Script(string scriptText, string path)
+    {
+        ScriptText = scriptText;
         ScriptPath = path;
-        ScriptName = ScriptRegex.Match(name).Groups[2].Value;
+        ScriptName = ScriptRegex.Match(path).Groups[2].Value;
         if (!long.TryParse(ScriptRegex.Match(path).Groups[1].Value, out long orderVal))
         {
             throw new Exception("Invalid script name.  Must be in the format _<order>_<name>.sql");
         }
 
         OrderNumber = orderVal;
-        ScriptText = File.ReadAllText(path);
         DatabaseToUse = LoadTag(@"\{\{AbstractDatabase=([<>a-z0-9_]+?)\}\}");
 
         string? trans = LoadTag(@"\{\{Transactional=([a-z0-9_]+?)}}");

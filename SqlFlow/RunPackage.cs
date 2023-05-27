@@ -112,6 +112,8 @@ public class RunPackage
                     break;
             }
         }
+
+        Completed(this, new RunWorkerCompletedEventArgs(e.Result, null, e.Cancel));
     }
 
     private IDatabase GetIDatabaseToUse(IDatabase optionsDatabase, Script script)
