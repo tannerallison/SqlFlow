@@ -5,19 +5,9 @@ using System.Text.RegularExpressions;
 
 namespace SqlFlow;
 
-public class ParsedSqlQuery
-{
-    public string Query { get; set; }
-
-    /// <summary>
-    /// The starting line number of the query within the larger script
-    /// </summary>
-    public int LineNumber { get; set; }
-}
-
 public class SqlScriptParser
 {
-    public static IList<ParsedSqlQuery> ParseScript(string script)
+    public static IList<ParsedSubQuery> ParseScript(string script)
     {
         string commandSql = script.ReplaceLineEndings().TrimEnd();
 
@@ -27,7 +17,7 @@ public class SqlScriptParser
         }
 
         // Split the query by the GO text
-        var queries = new List<ParsedSqlQuery>();
+        var queries = new List<ParsedSubQuery>();
         string[] lines = commandSql.Split(Environment.NewLine);
 
         var query = new StringBuilder();
@@ -68,7 +58,7 @@ public class SqlScriptParser
             var queryText = TrimQuery(query);
 
             if (!string.IsNullOrEmpty(queryText)) // Don't include empty queries
-                queries.Add(new ParsedSqlQuery { Query = queryText, LineNumber = queryLine });
+                queries.Add(new ParsedSubQuery { Query = queryText, LineNumber = queryLine });
 
             queryLine = lineNum + 1;
             query.Clear();
@@ -76,7 +66,7 @@ public class SqlScriptParser
 
         string lastQuery = TrimQuery(query);
         if (!string.IsNullOrEmpty(lastQuery)) // Don't include empty queries
-            queries.Add(new ParsedSqlQuery { Query = lastQuery, LineNumber = queryLine });
+            queries.Add(new ParsedSubQuery { Query = lastQuery, LineNumber = queryLine });
 
         return queries.AsReadOnly();
     }

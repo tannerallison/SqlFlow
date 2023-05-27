@@ -29,14 +29,14 @@ public class DatabaseSql : IDatabase
         using var transaction = ConditionallyOpenTransaction(connection, options.IsTransactional);
 
         var queries = SqlScriptParser.ParseScript(query);
-        ParsedSqlQuery? mostRecentQuery = null;
+        ParsedSubQuery? mostRecentQuery = null;
 
         try
         {
             if (options.IsTestRun)
                 new SqlCommand("SET PARSEONLY ON", connection).ExecuteNonQuery();
 
-            foreach (ParsedSqlQuery queryItem in queries)
+            foreach (ParsedSubQuery queryItem in queries)
             {
                 mostRecentQuery = queryItem;
 
