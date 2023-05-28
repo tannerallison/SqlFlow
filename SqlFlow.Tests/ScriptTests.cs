@@ -164,4 +164,18 @@ public class ScriptTests
 
         script.GetDatabaseToUse(new List<Variable>()).Should().Be("TestDB");
     }
+
+    [Fact]
+    public void WarnIsPopulatedWhenInstantiated()
+    {
+        var text = """
+        -- {{Warn=This is a warning}}
+        SELECT * FROM <<Test_Table>>
+        GO
+        """;
+
+        var script = new Script(@"_1000_Test1.sql", text);
+
+        script.Warning.Should().Be("This is a warning");
+    }
 }

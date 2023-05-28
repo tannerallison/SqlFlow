@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 
 namespace SqlFlow.Database.SqlServer;
 
-public class DatabaseSql : IDatabase
+public class DatabaseSql : Database
 {
     private readonly string _connectionString;
 
@@ -13,14 +13,16 @@ public class DatabaseSql : IDatabase
         _connectionString = connectionString;
     }
 
-    public IDatabase GetObjectForDatabaseNamed(string name)
+    protected override DbDataAdapter GetDataAdapter(DbCommand command) => new SqlDataAdapter(command as SqlCommand);
+
+    public override IDatabase GetObjectForDatabaseNamed(string name)
     {
         var builder = new SqlConnectionStringBuilder(_connectionString);
         builder.InitialCatalog = name;
         return new DatabaseSql(builder.ToString());
     }
 
-    public DbExecutionResult ExecuteCommand(string query, QueryOptions? options = null)
+    public override DbExecutionResult ExecuteCommand(string query, QueryOptions? options = null)
     {
         options ??= new QueryOptions();
 
@@ -33,7 +35,7 @@ public class DatabaseSql : IDatabase
         try
         {
             if (options.IsTestRun)
-                new SqlCommand("SET PARSEONLY ON", connection).ExecuteNonQuery();
+                SetUpCommand(connection, "SET PARSEONLY ON", options.Timeout).ExecuteNonQuery();
 
             foreach (ParsedSubQuery queryItem in queries)
             {
@@ -75,84 +77,11 @@ public class DatabaseSql : IDatabase
         finally
         {
             if (options.IsTestRun)
-                new SqlCommand("SET PARSEONLY OfF", connection).ExecuteNonQuery();
+                SetUpCommand(connection, "SET PARSEONLY OFF", options.Timeout).ExecuteNonQuery();
         }
     }
 
-    public DbExecutionResult<DbDataReader> ExecuteQueryDataReader(string query, int? timeout = null)
-    {
-        timeout ??= new QueryOptions().Timeout;
-        using var connection = GetConnection();
-        try
-        {
-            using var command = SetUpCommand(connection, query, timeout.Value);
-            var output = command.ExecuteReader();
-            return new DbExecutionResult<DbDataReader>(output, true, "Query executed successfully");
-        }
-        catch (Exception ex)
-        {
-            return new DbExecutionResult<DbDataReader>(null, false, "Error executing query", exception: ex);
-        }
-    }
-
-    public DbExecutionResult<DataTable> ExecuteQueryDataTable(string query, int? timeout = null)
-    {
-        timeout ??= new QueryOptions().Timeout;
-        var data = new DataTable();
-        using var connection = GetConnection();
-        try
-        {
-            using var command = SetUpCommand(connection, query, timeout.Value);
-            using var adapter = new SqlDataAdapter(command);
-            adapter.Fill(data);
-            return new DbExecutionResult<DataTable>(data, true, "Query executed successfully");
-        }
-        catch (Exception ex)
-        {
-            return new DbExecutionResult<DataTable>(null, false, "Error executing query", exception: ex);
-        }
-    }
-
-    public DbExecutionResult<object> ExecuteQueryScalar(string query, int? timeout = null)
-    {
-        timeout ??= new QueryOptions().Timeout;
-        using var connection = GetConnection();
-        try
-        {
-            using var command = SetUpCommand(connection, query, timeout.Value);
-            var output = command.ExecuteScalar();
-            return new DbExecutionResult<object>(output, true, "Query executed successfully");
-        }
-        catch (Exception ex)
-        {
-            return new DbExecutionResult<object>(null, false, "Error executing query", exception: ex);
-        }
-    }
-
-    private SqlCommand SetUpCommand(SqlConnection connection, string query, int timeout)
-    {
-        SqlCommand command = connection.CreateCommand();
-        command.CommandText = query;
-        command.CommandTimeout = timeout;
-        command.CommandType = CommandType.Text;
-        return command;
-    }
-
-    private SqlTransaction? ConditionallyOpenTransaction(SqlConnection connection, bool isTransactional)
-    {
-        SqlTransaction? transaction = null;
-        if (isTransactional)
-        {
-            transaction = connection.BeginTransaction();
-        }
-
-        return transaction;
-    }
-
-    private SqlConnection GetConnection()
-    {
-        return new SqlConnection(_connectionString);
-    }
+    protected override DbConnection GetConnection() => new SqlConnection(_connectionString);
 
     private static DbExecutionResult TryRollbackTransaction(DbTransaction? transaction, int? lineNumber,
         DbExecutionResult innerResult)

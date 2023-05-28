@@ -48,11 +48,6 @@ public class RunPackage
         _logger = logger ?? new LoggerConfiguration().CreateLogger();
     }
 
-    private void Report(int progress, string message)
-    {
-        _options.Progress?.Report(new RunProgress(progress, message));
-    }
-
     public RunResult Run()
     {
         decimal totalCount = _scripts.Count();
@@ -60,6 +55,7 @@ public class RunPackage
 
         IDatabase database = _options.Database;
         var runResult = new RunResult();
+        var stopwatch = Stopwatch.StartNew();
 
         foreach (var script in _scripts)
         {
@@ -78,10 +74,10 @@ public class RunPackage
 
             var scriptDatabase = GetIDatabaseToUse(database, script);
 
-            Report(progress, $"Beginning {script.ScriptName}...");
-            _logger.Information("Running {Script}", script.ScriptName);
+            Report(progress, $"Executing {script.ScriptName}...");
+            _logger.Information("Executing {Script}", script.ScriptName);
 
-            var stopwatch = Stopwatch.StartNew();
+            stopwatch.Restart();
             var dbExecutionResult = scriptDatabase.ExecuteCommand(query, options);
             stopwatch.Stop();
 
@@ -100,11 +96,17 @@ public class RunPackage
                 _logger.Error("Failed {Script} in {Elapsed:000} ms", script.ScriptName,
                     stopwatch.ElapsedMilliseconds);
             }
+
             if (!dbExecutionResult.Success && _options.BreakOnError)
                 break;
         }
 
         return runResult;
+    }
+
+    private void Report(int progress, string message)
+    {
+        _options.Progress?.Report(new RunProgress(progress, message));
     }
 
     private IDatabase GetIDatabaseToUse(IDatabase optionsDatabase, Script script)

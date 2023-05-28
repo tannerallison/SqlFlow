@@ -1,10 +1,9 @@
-﻿using System.Data;
-using System.Data.Common;
+﻿using System.Data.Common;
 using Oracle.DataAccess.Client;
 
 namespace SqlFlow.Database.Oracle;
 
-public class DatabaseOracle : IDatabase
+public class DatabaseOracle : Database
 {
     private readonly string _connectionString;
 
@@ -13,11 +12,16 @@ public class DatabaseOracle : IDatabase
         _connectionString = connectionString;
     }
 
-    public IDatabase GetObjectForDatabaseNamed(string name) => throw new NotImplementedException();
+    protected override DbDataAdapter GetDataAdapter(DbCommand command) => new OracleDataAdapter(command as OracleCommand);
 
-    public DbExecutionResult ExecuteCommand(string query, QueryOptions? options = null)
+    public override IDatabase GetObjectForDatabaseNamed(string name) => throw new NotImplementedException();
+
+    public override DbExecutionResult ExecuteCommand(string query, QueryOptions? options = null)
     {
         options ??= new QueryOptions();
+
+        if (options.IsTestRun)
+            throw new NotSupportedException("Test run is not supported for Oracle databases");
 
         using var connection = GetConnection();
         using var transaction = ConditionallyOpenTransaction(connection, options.IsTransactional);
@@ -25,79 +29,45 @@ public class DatabaseOracle : IDatabase
         var queries = OracleScriptParser.ParseScript(query);
         ParsedSubQuery? mostRecentQuery = null;
 
-        try
+        foreach (ParsedSubQuery queryItem in queries)
         {
-            if (options.IsTestRun)
-                new OracleCommand("SET PARSEONLY ON", connection).ExecuteNonQuery();
-
-            foreach (ParsedSubQuery queryItem in queries)
-            {
-                mostRecentQuery = queryItem;
-
-                if (options.CancellationToken?.IsCancellationRequested ?? false)
-                    break;
-
-                using var command = SetUpCommand(connection, queryItem.Query, options.Timeout);
-                try
-                {
-                    command.ExecuteNonQuery();
-                    if (options.IsTransactional && transaction?.Connection == null)
-                        return new DbExecutionResult(false,
-                            $"Query was rolled back on in the query that starts on line {queryItem.LineNumber}\r\n",
-                            queryItem.LineNumber);
-                }
-                catch (OracleException sqlException)
-                {
-                    return TryRollbackTransaction(transaction, mostRecentQuery.LineNumber, new DbExecutionResult(false,
-                        "Error executing query",
-                        queryItem.LineNumber + sqlException.Number, sqlException));
-                }
-            }
+            mostRecentQuery = queryItem;
 
             if (options.CancellationToken?.IsCancellationRequested ?? false)
+                break;
+
+            using var command = SetUpCommand(connection, queryItem.Query, options.Timeout);
+            try
             {
-                return TryRollbackTransaction(transaction, mostRecentQuery?.LineNumber,
-                    new DbExecutionResult(false, "Query cancelled", mostRecentQuery?.LineNumber));
+                command.ExecuteNonQuery();
+                if (options.IsTransactional && transaction?.Connection == null)
+                    return new DbExecutionResult(false,
+                        $"Query was rolled back on in the query that starts on line {queryItem.LineNumber}\r\n",
+                        queryItem.LineNumber);
             }
-
-            if (options.IsTransactional && transaction?.Connection == null)
-                return new DbExecutionResult(false, "Query was rolled back.");
-
-            transaction?.Commit();
-
-            return new DbExecutionResult(true, "Query executed successfully");
+            catch (OracleException sqlException)
+            {
+                return TryRollbackTransaction(transaction, mostRecentQuery.LineNumber, new DbExecutionResult(false,
+                    "Error executing query",
+                    queryItem.LineNumber + sqlException.Number, sqlException));
+            }
         }
-        finally
+
+        if (options.CancellationToken?.IsCancellationRequested ?? false)
         {
-            if (options.IsTestRun)
-                new OracleCommand("SET PARSEONLY OfF", connection).ExecuteNonQuery();
-        }
-    }
-
-    private OracleConnection GetConnection()
-    {
-        return new OracleConnection(_connectionString);
-    }
-
-    private OracleTransaction? ConditionallyOpenTransaction(OracleConnection connection, bool isTransactional)
-    {
-        OracleTransaction? transaction = null;
-        if (isTransactional)
-        {
-            transaction = connection.BeginTransaction();
+            return TryRollbackTransaction(transaction, mostRecentQuery?.LineNumber,
+                new DbExecutionResult(false, "Query cancelled", mostRecentQuery?.LineNumber));
         }
 
-        return transaction;
+        if (options.IsTransactional && transaction?.Connection == null)
+            return new DbExecutionResult(false, "Query was rolled back.");
+
+        transaction?.Commit();
+
+        return new DbExecutionResult(true, "Query executed successfully");
     }
 
-    private OracleCommand SetUpCommand(OracleConnection connection, string query, int timeout)
-    {
-        OracleCommand command = connection.CreateCommand();
-        command.CommandText = query;
-        command.CommandTimeout = timeout;
-        command.CommandType = CommandType.Text;
-        return command;
-    }
+    protected override DbConnection GetConnection() => new OracleConnection(_connectionString);
 
     private static DbExecutionResult TryRollbackTransaction(DbTransaction? transaction, int? lineNumber,
         DbExecutionResult innerResult)
@@ -108,18 +78,10 @@ public class DatabaseOracle : IDatabase
         }
         catch (Exception ex)
         {
-            return new DbExecutionResult(false, "Unable to roll back transaction", lineNumber, ex, innerResult: innerResult);
+            return new DbExecutionResult(false, "Unable to roll back transaction", lineNumber, ex,
+                innerResult: innerResult);
         }
 
         return innerResult;
     }
-
-    public DbExecutionResult<DbDataReader> ExecuteQueryDataReader(string query, int? timeout = null) =>
-        throw new NotImplementedException();
-
-    public DbExecutionResult<DataTable> ExecuteQueryDataTable(string query, int? timeout = null) =>
-        throw new NotImplementedException();
-
-    public DbExecutionResult<object> ExecuteQueryScalar(string query, int? timeout = null) =>
-        throw new NotImplementedException();
 }
