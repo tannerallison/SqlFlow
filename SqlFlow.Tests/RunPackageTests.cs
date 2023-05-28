@@ -42,9 +42,9 @@ public class RunPackageTests
 
         progress.Should().Equal(new List<int> { 50, 50, 100, 100 });
 
-        messages.Should().Contain("Beginning Test1...")
+        messages.Should().Contain("Executing Test1...")
             .And.Contain("Completed Test1")
-            .And.Contain("Beginning Test2...")
+            .And.Contain("Executing Test2...")
             .And.Contain("Completed Test2");
     }
 
@@ -57,7 +57,7 @@ public class RunPackageTests
         SELECT * FROM TABLE1
         """;
         var scripts = new List<Script> { new(@"_1000_Test1.sql", text) };
-        var variables = new List<Variable> { new() { Key = "DB_TO_USE", Value = "OtherDatabase" } };
+        var variables = new List<Variable> { new("DB_TO_USE") { Value = "OtherDatabase" } };
 
         Mock<IDatabase> secondaryDatabase = new();
         secondaryDatabase

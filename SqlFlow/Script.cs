@@ -4,6 +4,26 @@ namespace SqlFlow;
 
 public class Script
 {
+    public override bool Equals(object obj)
+    {
+        return obj.GetType() == typeof(Script) && Equals((Script)obj);
+    }
+
+    public bool Equals(Script other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Equals(other.ScriptPath, ScriptPath);
+    }
+
+    public override int GetHashCode()
+    {
+        // ReSharper disable NonReadonlyFieldInGetHashCode
+        // We want this to be alterable so two Script objects with the same _scriptText will show as the same.
+        return ScriptPath.GetHashCode();
+        // ReSharper restore NonReadonlyFieldInGetHashCode
+    }
+
     public static readonly Regex ScriptRegex = new("^_(\\d+)_(.+).sql",
         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
