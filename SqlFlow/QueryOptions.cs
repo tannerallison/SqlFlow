@@ -4,12 +4,12 @@ namespace SqlFlow;
 
 public class QueryOptions
 {
-    public QueryOptions(int? timeout = null, bool? isTransactional = true, BackgroundWorker? worker = null,
+    public QueryOptions(int? timeout = null, bool? isTransactional = true, CancellationToken? cancellationToken = null,
         bool isTestRun = false)
     {
         Timeout = timeout ?? DefaultTimeout;
         IsTransactional = isTransactional ?? true;
-        Worker = worker;
+        CancellationToken = cancellationToken;
         IsTestRun = isTestRun;
     }
 
@@ -20,5 +20,5 @@ public class QueryOptions
 
     public bool IsTestRun { get; }
 
-    public BackgroundWorker? Worker { get; }
+    public CancellationToken? CancellationToken { get; }
 }

@@ -18,7 +18,7 @@ public interface IDatabase
     /// <param name="query"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    RunResult ExecuteCommand(string query, QueryOptions? options = null);
+    DbExecutionResult ExecuteCommand(string query, QueryOptions? options = null);
 
     /// <summary>
     /// Execute a query against the database and return a data reader.
@@ -26,7 +26,7 @@ public interface IDatabase
     /// <param name="query"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    RunResult<DbDataReader> ExecuteQueryDataReader(string query, int? timeout = null);
+    DbExecutionResult<DbDataReader> ExecuteQueryDataReader(string query, int? timeout = null);
 
     /// <summary>
     /// Execute a query against the database and return a data table.
@@ -34,7 +34,7 @@ public interface IDatabase
     /// <param name="query"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    RunResult<DataTable> ExecuteQueryDataTable(string query, int? timeout = null);
+    DbExecutionResult<DataTable> ExecuteQueryDataTable(string query, int? timeout = null);
 
     /// <summary>
     /// Execute a query against the database and return a scalar value.
@@ -42,5 +42,5 @@ public interface IDatabase
     /// <param name="query"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
-    RunResult<object> ExecuteQueryScalar(string query, int? timeout = null);
+    DbExecutionResult<object> ExecuteQueryScalar(string query, int? timeout = null);
 }

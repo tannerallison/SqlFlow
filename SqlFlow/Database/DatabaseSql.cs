@@ -21,7 +21,7 @@ public class DatabaseSql : IDatabase
         return new DatabaseSql(builder.ToString());
     }
 
-    public RunResult ExecuteCommand(string query, QueryOptions? options = null)
+    public DbExecutionResult ExecuteCommand(string query, QueryOptions? options = null)
     {
         options ??= new QueryOptions();
 
@@ -40,7 +40,7 @@ public class DatabaseSql : IDatabase
             {
                 mostRecentQuery = queryItem;
 
-                if (options.Worker?.CancellationPending ?? false)
+                if (options.CancellationToken?.IsCancellationRequested ?? false)
                     break;
 
                 using var command = SetUpCommand(connection, queryItem.Query, options.Timeout);
@@ -48,30 +48,30 @@ public class DatabaseSql : IDatabase
                 {
                     command.ExecuteNonQuery();
                     if (options.IsTransactional && transaction?.Connection == null)
-                        return new RunResult(false,
+                        return new DbExecutionResult(false,
                             $"Query was rolled back on in the query that starts on line {queryItem.LineNumber}\r\n",
                             queryItem.LineNumber);
                 }
                 catch (SqlException sqlException)
                 {
-                    return TryRollbackTransaction(transaction, mostRecentQuery.LineNumber, new RunResult(false,
+                    return TryRollbackTransaction(transaction, mostRecentQuery.LineNumber, new DbExecutionResult(false,
                         "Error executing query",
                         queryItem.LineNumber + sqlException.LineNumber, sqlException));
                 }
             }
 
-            if (options.Worker?.CancellationPending ?? false)
+            if (options.CancellationToken?.IsCancellationRequested ?? false)
             {
                 return TryRollbackTransaction(transaction, mostRecentQuery?.LineNumber,
-                    new RunResult(false, "Query cancelled", mostRecentQuery?.LineNumber));
+                    new DbExecutionResult(false, "Query cancelled", mostRecentQuery?.LineNumber));
             }
 
             if (options.IsTransactional && transaction?.Connection == null)
-                return new RunResult(false, "Query was rolled back.");
+                return new DbExecutionResult(false, "Query was rolled back.");
 
             transaction?.Commit();
 
-            return new RunResult(true, "Query executed successfully");
+            return new DbExecutionResult(true, "Query executed successfully");
         }
         finally
         {
@@ -80,7 +80,7 @@ public class DatabaseSql : IDatabase
         }
     }
 
-    public RunResult<DbDataReader> ExecuteQueryDataReader(string query, int? timeout = null)
+    public DbExecutionResult<DbDataReader> ExecuteQueryDataReader(string query, int? timeout = null)
     {
         timeout ??= new QueryOptions().Timeout;
         using var connection = GetConnection();
@@ -88,15 +88,15 @@ public class DatabaseSql : IDatabase
         {
             using var command = SetUpCommand(connection, query, timeout.Value);
             var output = command.ExecuteReader();
-            return new RunResult<DbDataReader>(output, true, "Query executed successfully");
+            return new DbExecutionResult<DbDataReader>(output, true, "Query executed successfully");
         }
         catch (Exception ex)
         {
-            return new RunResult<DbDataReader>(null, false, "Error executing query", exception: ex);
+            return new DbExecutionResult<DbDataReader>(null, false, "Error executing query", exception: ex);
         }
     }
 
-    public RunResult<DataTable> ExecuteQueryDataTable(string query, int? timeout = null)
+    public DbExecutionResult<DataTable> ExecuteQueryDataTable(string query, int? timeout = null)
     {
         timeout ??= new QueryOptions().Timeout;
         var data = new DataTable();
@@ -106,15 +106,15 @@ public class DatabaseSql : IDatabase
             using var command = SetUpCommand(connection, query, timeout.Value);
             using var adapter = new SqlDataAdapter(command);
             adapter.Fill(data);
-            return new RunResult<DataTable>(data, true, "Query executed successfully");
+            return new DbExecutionResult<DataTable>(data, true, "Query executed successfully");
         }
         catch (Exception ex)
         {
-            return new RunResult<DataTable>(null, false, "Error executing query", exception: ex);
+            return new DbExecutionResult<DataTable>(null, false, "Error executing query", exception: ex);
         }
     }
 
-    public RunResult<object> ExecuteQueryScalar(string query, int? timeout = null)
+    public DbExecutionResult<object> ExecuteQueryScalar(string query, int? timeout = null)
     {
         timeout ??= new QueryOptions().Timeout;
         using var connection = GetConnection();
@@ -122,11 +122,11 @@ public class DatabaseSql : IDatabase
         {
             using var command = SetUpCommand(connection, query, timeout.Value);
             var output = command.ExecuteScalar();
-            return new RunResult<object>(output, true, "Query executed successfully");
+            return new DbExecutionResult<object>(output, true, "Query executed successfully");
         }
         catch (Exception ex)
         {
-            return new RunResult<object>(null, false, "Error executing query", exception: ex);
+            return new DbExecutionResult<object>(null, false, "Error executing query", exception: ex);
         }
     }
 
@@ -155,8 +155,8 @@ public class DatabaseSql : IDatabase
         return new SqlConnection(_connectionString);
     }
 
-    private static RunResult TryRollbackTransaction(DbTransaction? transaction, int? lineNumber,
-        RunResult innerResult)
+    private static DbExecutionResult TryRollbackTransaction(DbTransaction? transaction, int? lineNumber,
+        DbExecutionResult innerResult)
     {
         try
         {
@@ -164,7 +164,7 @@ public class DatabaseSql : IDatabase
         }
         catch (Exception ex)
         {
-            return new RunResult(false, "Unable to roll back transaction", lineNumber, ex, innerResult: innerResult);
+            return new DbExecutionResult(false, "Unable to roll back transaction", lineNumber, ex, innerResult: innerResult);
         }
 
         return innerResult;

@@ -16,32 +16,31 @@ public class RunPackageTests
         Mock<IDatabase> mockDatabase = new();
         mockDatabase
             .Setup(x => x.ExecuteCommand(It.IsAny<string>(), It.IsAny<QueryOptions>()))
-            .Returns(new RunResult(true, "Ran successfully"));
+            .Returns(new DbExecutionResult(true, "Ran successfully"));
 
         var variables = new List<Variable>();
-        var options = new RunOptions { Database = mockDatabase.Object };
+        var progress1 = new Progress<RunProgress>();
+        var options = new RunOptions
+        {
+            Database = mockDatabase.Object,
+            Progress = progress1
+        };
         var runPackage = new RunPackage(scripts, variables, options);
         var messages = new List<string>();
         var progress = new List<int>();
-        runPackage.ProgressChanged += (sender, args) =>
+        progress1.ProgressChanged += (sender, runProgress) =>
         {
-            progress.Add(args.ProgressPercentage);
-            messages.Add(args.UserState?.ToString());
+            progress.Add(runProgress.Percent);
+            messages.Add(runProgress.Message);
         };
 
-        var worker = runPackage.Run();
-        while (worker.IsBusy)
-        {
-            Thread.Sleep(100);
-        }
+        var task = runPackage.Run();
 
-        progress.Should().Equal(new List<int>{50,50,100,100});
+        progress.Should().Equal(new List<int> { 50, 50, 100, 100 });
 
         messages.Should().Contain("Beginning Test1...")
             .And.Contain("Completed Test1")
             .And.Contain("Beginning Test2...")
             .And.Contain("Completed Test2");
-
-
     }
 }
