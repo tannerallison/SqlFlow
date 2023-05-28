@@ -2,7 +2,7 @@
 using System.Data.Common;
 using Oracle.DataAccess.Client;
 
-namespace SqlFlow;
+namespace SqlFlow.Database.Oracle;
 
 public class DatabaseOracle : IDatabase
 {

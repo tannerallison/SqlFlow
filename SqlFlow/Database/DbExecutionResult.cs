@@ -1,6 +1,4 @@
-using System;
-
-namespace SqlFlow;
+namespace SqlFlow.Database;
 
 public class DbExecutionResult<T> : DbExecutionResult
 {

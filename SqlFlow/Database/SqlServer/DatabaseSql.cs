@@ -1,9 +1,8 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
 
-namespace SqlFlow;
+namespace SqlFlow.Database.SqlServer;
 
 public class DatabaseSql : IDatabase
 {

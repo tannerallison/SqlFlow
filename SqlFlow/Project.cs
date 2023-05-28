@@ -1,4 +1,6 @@
-﻿namespace SqlFlow;
+﻿using SqlFlow.Database;
+
+namespace SqlFlow;
 
 public class Project
 {

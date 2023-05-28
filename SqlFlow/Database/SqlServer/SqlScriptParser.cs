@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 
-namespace SqlFlow;
+namespace SqlFlow.Database.SqlServer;
 
-public class SqlScriptParser
+public static class SqlScriptParser
 {
     public static IList<ParsedSubQuery> ParseScript(string script)
     {

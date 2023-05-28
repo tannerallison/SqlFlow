@@ -1,8 +1,8 @@
 ﻿using System.Text;
 
-namespace SqlFlow;
+namespace SqlFlow.Database.Oracle;
 
-public class OracleScriptParser
+public static class OracleScriptParser
 {
     public static IList<ParsedSubQuery> ParseScript(string script)
     {
@@ -53,7 +53,8 @@ public class OracleScriptParser
                 && dec == false
                 && beg == 0)
             {
-                queries.Add(new ParsedSubQuery{LineNumber = queryLine, Query = query.Replace(";", "\r\n").ToString().Trim()});
+                queries.Add(new ParsedSubQuery
+                    { LineNumber = queryLine, Query = query.Replace(";", "\r\n").ToString().Trim() });
                 queryLine = lineNum + 1;
                 query.Clear();
             }
@@ -64,7 +65,8 @@ public class OracleScriptParser
             else if (line.ToUpper().StartsWith("/") && dec)
             {
                 dec = false;
-                queries.Add(new ParsedSubQuery{LineNumber = queryLine, Query = query.ToString().Trim().TrimEnd('/', ';')});
+                queries.Add(new ParsedSubQuery
+                    { LineNumber = queryLine, Query = query.ToString().Trim().TrimEnd('/', ';') });
                 queryLine = lineNum + 1;
                 query.Clear();
             }
@@ -80,7 +82,8 @@ public class OracleScriptParser
                 // if the number of BEGIN statements equals zero, then we've reached the last END, parse out the script.
                 if (beg == 0)
                 {
-                    queries.Add(new ParsedSubQuery{LineNumber = queryLine, Query = query.ToString().Trim().TrimEnd('/')});
+                    queries.Add(new ParsedSubQuery
+                        { LineNumber = queryLine, Query = query.ToString().Trim().TrimEnd('/') });
                     queryLine = lineNum + 1;
                     query.Clear();
                 }
