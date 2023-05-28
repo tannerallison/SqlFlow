@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Moq;
+using Serilog;
 using SqlFlow.Database;
 
 namespace SqlFlow.Tests;
@@ -11,8 +12,8 @@ public class RunPackageTests
     {
         var scripts = new List<Script>
         {
-            Script.FromString("SELECT * FROM TABLE1", @"_1000_Test1.sql"),
-            Script.FromString("SELECT * FROM TABLE2", @"_1010_Test2.sql"),
+            new( @"_1000_Test1.sql", @"SELECT * FROM TABLE1"),
+            new( @"_1010_Test2.sql", @"SELECT * FROM TABLE2"),
         };
         Mock<IDatabase> mockDatabase = new();
         mockDatabase
@@ -21,12 +22,13 @@ public class RunPackageTests
 
         var variables = new List<Variable>();
         var progress1 = new Progress<RunProgress>();
+
         var options = new RunOptions
         {
             Database = mockDatabase.Object,
             Progress = progress1
         };
-        var runPackage = new RunPackage(scripts, variables, options);
+        var runPackage = new RunPackage(scripts, variables, options, logger: new LoggerConfiguration().WriteTo.Console().CreateLogger());
         var messages = new List<string>();
         var progress = new List<int>();
         progress1.ProgressChanged += (sender, runProgress) =>

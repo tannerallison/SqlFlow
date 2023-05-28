@@ -17,7 +17,7 @@ public class RunResult
 {
     public List<DbExecutionResult> Results { get; set; } = new();
     public bool Success => Results.All(r => r.Success);
-    public bool Cancelled { get; set; } = false;
+    public bool Cancelled { get; set; }
 }
 
 public struct RunProgress
@@ -99,10 +99,9 @@ public class RunPackage
                     $"Failed {script.ScriptName} on line {dbExecutionResult.LineNumber}: {dbExecutionResult.Message}");
                 _logger.Error("Failed {Script} in {Elapsed:000} ms", script.ScriptName,
                     stopwatch.ElapsedMilliseconds);
-
-                if (_options.BreakOnError)
-                    break;
             }
+            if (!dbExecutionResult.Success && _options.BreakOnError)
+                break;
         }
 
         return runResult;

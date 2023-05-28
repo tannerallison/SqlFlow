@@ -7,6 +7,13 @@ public class Script
     public static readonly Regex ScriptRegex = new("^_(\\d+)_(.+).sql",
         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
+    private const string TagDatabase = @"\{\{AbstractDatabase=([<>a-z0-9_]+?)\}\}";
+    private const string TagTransaction = @"\{\{Transactional=([a-z0-9_]+?)}}";
+    private const string TagSubset = @"\{\{subset=([a-z0-9_]+?)}}";
+    private const string TagVariable = @"<<([a-z0-9_]+?)>>";
+    private const string TagTimeout = @"\{\{Timeout=([0-9]+?)}}";
+    private const string TagWarning = @"\{\{Warn=(.+?)}}";
+
     public string ScriptText { get; }
 
     public HashSet<string> ScriptSets { get; } = new();
@@ -20,39 +27,50 @@ public class Script
     public long OrderNumber { get; }
     private string? DatabaseToUse { get; }
 
-    public static Script FromString(string scriptText, string path)
-    {
-        return new Script(scriptText, path);
-    }
-
-    public Script(string path) : this(File.ReadAllText(path), path)
+    public Script(string scriptPath) : this(scriptPath, ParseOrderNumberFromPath(scriptPath),
+        ParseNameFromPath(scriptPath), ReadScriptText(scriptPath))
     {
     }
 
-    private Script(string scriptText, string path)
+    public Script(string scriptPath, string scriptText) : this(scriptPath, ParseOrderNumberFromPath(scriptPath),
+        ParseNameFromPath(scriptPath), scriptText)
     {
+    }
+
+    public Script(string scriptPath, long orderNumber, string scriptName, string scriptText)
+    {
+        ScriptName = scriptName;
+        ScriptPath = scriptPath;
         ScriptText = scriptText;
-        ScriptPath = path;
-        ScriptName = ScriptRegex.Match(path).Groups[2].Value;
+        OrderNumber = orderNumber;
+
+        DatabaseToUse = LoadTag(TagDatabase);
+
+        string? trans = LoadTag(TagTransaction);
+        IsTransactional = trans == null || trans.ToLower() == "true";
+
+        LoadMultiTag(TagSubset).ForEach(x => ScriptSets.Add(x));
+
+        LoadMultiTag(TagVariable).ForEach(x => ScriptVariables.Add(x));
+
+        if (int.TryParse(LoadTag(TagTimeout), out int timeoutValue))
+            Timeout = timeoutValue;
+
+        Warning = LoadTag(TagWarning);
+    }
+
+    private static string ReadScriptText(string path) => File.ReadAllText(path);
+
+    private static string ParseNameFromPath(string path) => ScriptRegex.Match(path).Groups[2].Value;
+
+    private static long ParseOrderNumberFromPath(string path)
+    {
         if (!long.TryParse(ScriptRegex.Match(path).Groups[1].Value, out long orderVal))
         {
             throw new Exception("Invalid script name.  Must be in the format _<order>_<name>.sql");
         }
 
-        OrderNumber = orderVal;
-        DatabaseToUse = LoadTag(@"\{\{AbstractDatabase=([<>a-z0-9_]+?)\}\}");
-
-        string? trans = LoadTag(@"\{\{Transactional=([a-z0-9_]+?)}}");
-        IsTransactional = trans == null || trans.ToLower() == "true";
-
-        LoadMultiTag(@"\{\{subset=([a-z0-9_]+?)}}").ForEach(x => ScriptSets.Add(x));
-
-        LoadMultiTag("<<([a-z0-9_]+?)>>").ForEach(x => ScriptVariables.Add(x));
-
-        if (int.TryParse(LoadTag(@"\{\{Timeout=([0-9]+?)}}"), out int timeoutValue))
-            Timeout = timeoutValue;
-
-        Warning = LoadTag(@"\{\{Warn=(.+?)}}");
+        return orderVal;
     }
 
     public string GetReplacedText(ICollection<Variable> variables) => ReplaceVariables(ScriptText, variables);
