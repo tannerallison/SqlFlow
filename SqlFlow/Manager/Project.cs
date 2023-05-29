@@ -2,7 +2,7 @@
 using Serilog;
 using SqlFlow.Database;
 
-namespace SqlFlow;
+namespace SqlFlow.Manager;
 
 public class Project
 {

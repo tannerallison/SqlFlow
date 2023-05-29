@@ -2,6 +2,8 @@
 using Moq;
 using Serilog;
 using SqlFlow.Database;
+using SqlFlow.Manager;
+using SqlFlow.Runner;
 
 namespace SqlFlow.Tests;
 

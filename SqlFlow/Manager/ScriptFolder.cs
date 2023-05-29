@@ -1,4 +1,4 @@
-﻿namespace SqlFlow;
+﻿namespace SqlFlow.Manager;
 
 public class ScriptFolder
 {

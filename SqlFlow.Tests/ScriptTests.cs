@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using SqlFlow.Manager;
 
 namespace SqlFlow.Tests;
 
@@ -23,7 +24,7 @@ public class ScriptTests
     public void VariablesArePopulatedWhenInstantiated()
     {
         var text = """
-        SELECT * FROM <<Test_Table>>
+        SELECT * FROM [<<Test_Table>>]
         GO
 
         SELECT '<<AnotherOne>>' FROM TABLE_B
@@ -71,7 +72,7 @@ public class ScriptTests
     public void TransactionIsFalseForAnyValueExceptTrue()
     {
         var text = """
-        -- {{Transactional=avsvsdv}}
+        -- {{Transactional=anything_but_true}}
         SELECT * FROM <<Test_Table>>
         GO
 
@@ -88,7 +89,7 @@ public class ScriptTests
     public void TransactionDefaultsToTrueIfNotSet()
     {
         var text = """
-        SELECT * FROM <<Test_Table>>
+        SELECT * FROM [<<Test_Table>>]
         GO
 
         SELECT '<<AnotherOne>>' FROM TABLE_B
@@ -104,7 +105,7 @@ public class ScriptTests
     public void SpecifiesDatabaseDefaultsToFalseIfNotSet()
     {
         var text = """
-        SELECT * FROM <<Test_Table>>
+        SELECT * FROM [<<Test_Table>>]
         GO
         """;
 

@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace SqlFlow;
+namespace SqlFlow.Manager;
 
 public class Script
 {
@@ -81,11 +81,18 @@ public class Script
     private string ReplaceVariables(string value, ICollection<Variable> variables)
     {
         string ReplaceVariable(string current, Variable v) => current.Replace($"<<{v.Key}>>", v.Value);
+
         return variables.Aggregate(value, ReplaceVariable);
     }
 
     public bool SpecifiesDatabase => DatabaseToUse != null;
 
+    /// <summary>
+    /// Pass in a list of populated variables in order to allow databases defined as a variable to be
+    /// populated from the value of the variable.
+    /// </summary>
+    /// <param name="variables"></param>
+    /// <returns></returns>
     public string? GetDatabaseToUse(ICollection<Variable> variables)
     {
         return DatabaseToUse == null

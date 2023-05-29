@@ -1,36 +1,9 @@
 ﻿using System.Diagnostics;
 using Serilog;
 using SqlFlow.Database;
+using SqlFlow.Manager;
 
-namespace SqlFlow;
-
-public record RunOptions
-{
-    public bool TestRun { get; init; }
-    public bool BreakOnError { get; init; }
-    public IProgress<RunProgress>? Progress { get; init; }
-    public CancellationToken? CancellationToken { get; init; }
-    public ILogger? Logger { get; init; }
-}
-
-public class RunResult
-{
-    public List<DbExecutionResult> Results { get; set; } = new();
-    public bool Success => Results.All(r => r.Success);
-    public bool Cancelled { get; set; }
-}
-
-public struct RunProgress
-{
-    public RunProgress(int percent, string message)
-    {
-        Percent = percent;
-        Message = message;
-    }
-
-    public int Percent { get; set; }
-    public string Message { get; set; }
-}
+namespace SqlFlow.Runner;
 
 public class RunPackage
 {

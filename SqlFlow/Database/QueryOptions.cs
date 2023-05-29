@@ -1,4 +1,4 @@
-namespace SqlFlow;
+namespace SqlFlow.Database;
 
 public class QueryOptions
 {
