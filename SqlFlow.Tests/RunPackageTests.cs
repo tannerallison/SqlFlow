@@ -25,11 +25,10 @@ public class RunPackageTests
 
         var options = new RunOptions
         {
-            Database = mockDatabase.Object,
-            Progress = progress1
+            Progress = progress1,
+            Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger()
         };
-        var runPackage = new RunPackage(scripts, variables, options,
-            logger: new LoggerConfiguration().WriteTo.Console().CreateLogger());
+        var runPackage = new RunPackage(scripts, variables, mockDatabase.Object, options);
         var messages = new List<string>();
         var progress = new List<int>();
         progress1.ProgressChanged += (sender, runProgress) =>
@@ -69,12 +68,7 @@ public class RunPackageTests
             .Setup(x => x.GetObjectForDatabaseNamed("OtherDatabase"))
             .Returns(secondaryDatabase.Object);
 
-        var options = new RunOptions
-        {
-            Database = mockDatabase.Object
-        };
-
-        new RunPackage(scripts, variables, options).Run();
+        new RunPackage(scripts, variables, mockDatabase.Object).Run();
 
         mockDatabase.Verify(x => x.GetObjectForDatabaseNamed("OtherDatabase"));
 

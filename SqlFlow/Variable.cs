@@ -9,13 +9,13 @@ public class Variable
     }
 
     public string Key { get; set; }
-    public string Value { get; set; }
+    public string? Value { get; set; }
     public bool Editable { get; set; }
-    public ISet<Script> Scripts { get; set; }
+    public ISet<Script> Scripts { get; set; } = new HashSet<Script>();
 }
 
 public class Subset
 {
     public string Name { get; set; }
-    public ICollection<Script> Scripts { get; set; }
+    public ICollection<Script> Scripts { get; set; } = new List<Script>();
 }

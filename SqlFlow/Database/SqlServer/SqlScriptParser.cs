@@ -56,7 +56,7 @@ public static class SqlScriptParser
             var queryText = TrimQuery(query);
 
             if (!string.IsNullOrEmpty(queryText)) // Don't include empty queries
-                queries.Add(new ParsedSubQuery { Query = queryText, LineNumber = queryLine });
+                queries.Add(new ParsedSubQuery(queryText, queryLine));
 
             queryLine = lineNum + 1;
             query.Clear();
@@ -64,7 +64,7 @@ public static class SqlScriptParser
 
         string lastQuery = TrimQuery(query);
         if (!string.IsNullOrEmpty(lastQuery)) // Don't include empty queries
-            queries.Add(new ParsedSubQuery { Query = lastQuery, LineNumber = queryLine });
+            queries.Add(new ParsedSubQuery(lastQuery, queryLine));
 
         return queries.AsReadOnly();
     }

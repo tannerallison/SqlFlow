@@ -12,4 +12,12 @@ public class ScriptFolder
     public string Path { get; set; }
     public SearchOption SearchOption { get; set; }
     public string Color { get; set; }
+
+    public ICollection<Script> GetScriptsFromFolder()
+    {
+        return Directory.GetFiles(Path, "*.sql", SearchOption)
+            .Where(f => Script.ScriptRegex.IsMatch(f))
+            .Select(f => new Script(f) { ScriptFolder = this })
+            .ToList();
+    }
 }

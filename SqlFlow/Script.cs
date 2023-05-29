@@ -4,26 +4,6 @@ namespace SqlFlow;
 
 public class Script
 {
-    public override bool Equals(object obj)
-    {
-        return obj.GetType() == typeof(Script) && Equals((Script)obj);
-    }
-
-    public bool Equals(Script other)
-    {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
-        return Equals(other.ScriptPath, ScriptPath);
-    }
-
-    public override int GetHashCode()
-    {
-        // ReSharper disable NonReadonlyFieldInGetHashCode
-        // We want this to be alterable so two Script objects with the same _scriptText will show as the same.
-        return ScriptPath.GetHashCode();
-        // ReSharper restore NonReadonlyFieldInGetHashCode
-    }
-
     public static readonly Regex ScriptRegex = new("^_(\\d+)_(.+).sql",
         RegexOptions.IgnoreCase | RegexOptions.Singleline);
 
@@ -34,7 +14,12 @@ public class Script
     private const string TagTimeout = @"\{\{Timeout=([0-9]+?)}}";
     private const string TagWarning = @"\{\{Warn=(.+?)}}";
 
+    public string ScriptPath { get; }
+    public long OrderNumber { get; }
+    public string ScriptName { get; }
     public string ScriptText { get; }
+
+    public ScriptFolder? ScriptFolder { get; init; }
 
     public HashSet<string> ScriptSets { get; } = new();
     public HashSet<string> ScriptVariables { get; } = new();
@@ -42,9 +27,6 @@ public class Script
     public int? Timeout { get; }
     public string? Warning { get; }
     public bool IsTransactional { get; }
-    public string ScriptName { get; }
-    public string ScriptPath { get; }
-    public long OrderNumber { get; }
     private string? DatabaseToUse { get; }
 
     public Script(string scriptPath) : this(scriptPath, ParseOrderNumberFromPath(scriptPath),
@@ -57,12 +39,13 @@ public class Script
     {
     }
 
-    public Script(string scriptPath, long orderNumber, string scriptName, string scriptText)
+    public Script(string scriptPath, long orderNumber, string scriptName, string scriptText, ScriptFolder? scriptFolder = null)
     {
         ScriptName = scriptName;
         ScriptPath = scriptPath;
         ScriptText = scriptText;
         OrderNumber = orderNumber;
+        ScriptFolder = scriptFolder;
 
         DatabaseToUse = LoadTag(TagDatabase);
 
@@ -109,7 +92,6 @@ public class Script
             ? null
             : ReplaceVariables(DatabaseToUse, variables);
     }
-
 
     private List<string> LoadMultiTag(string regex, int grouping = 1)
     {

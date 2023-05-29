@@ -1,5 +1,5 @@
 ﻿using System.Data.Common;
-using Oracle.DataAccess.Client;
+using Oracle.ManagedDataAccess.Client;
 
 namespace SqlFlow.Database.Oracle;
 
@@ -12,9 +12,11 @@ public class DatabaseOracle : Database
         _connectionString = connectionString;
     }
 
-    protected override DbDataAdapter GetDataAdapter(DbCommand command) => new OracleDataAdapter(command as OracleCommand);
+    protected override DbDataAdapter GetDataAdapter(DbCommand command) =>
+        new OracleDataAdapter(command as OracleCommand);
 
-    public override IDatabase GetObjectForDatabaseNamed(string name) => throw new NotImplementedException();
+    public override IDatabase GetObjectForDatabaseNamed(string name) =>
+        throw new NotSupportedException("Oracle does not support multiple databases");
 
     public override DbExecutionResult ExecuteCommand(string query, QueryOptions? options = null)
     {
