@@ -143,7 +143,7 @@ public class ScriptTests
         """;
 
         var script = new Script(@"_1000_Test1.sql", text);
-        var variables = new List<Variable> { new() { Key = "Variable_Db", Value = "TestDB" } };
+        var variables = new List<Variable> { new("Variable_Db") { Value = "TestDB" } };
 
         script.GetDatabaseToUse(variables).Should().Be("TestDB");
     }
