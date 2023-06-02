@@ -1,0 +1,46 @@
+﻿<Window x:Class="SqlFlow.Views.EditScriptFolderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        mc:Ignorable="d"
+        Title="Edit Script Folder" Height="230" Width="400">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="400*" />
+            <ColumnDefinition Width="60" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.ColumnSpan="3" Text="Edit Script Folder" FontSize="16" FontWeight="Bold" />
+
+        <TextBlock Text="Path:" Grid.Row="1" Margin="5" />
+        <TextBox Text="{Binding Path}" Grid.Row="1" Grid.Column="1" Margin="5" />
+        <Button Content="Browse" Grid.Row="1" Grid.Column="2" Margin="5" Click="Browse_Click" />
+
+        <TextBlock Text="Search Option:" Grid.Row="2" Margin="5" />
+        <ComboBox x:Name="SearchOptionBox" SelectedItem="{Binding SearchOption}"
+                  Grid.Row="2" Grid.Column="1" Margin="5" />
+
+        <TextBlock Text="Color:" Grid.Row="3" Margin="5" />
+        <xctk:ColorPicker Grid.Row="3" Grid.Column="1" Name="ClrPckerBackground" Margin="5"
+                          SelectedColor="{Binding Color}"
+                          SelectedColorChanged="ClrPcker_Background_SelectedColorChanged" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="6" Grid.ColumnSpan="3"
+                    Margin="0,20,0,0">
+            <Button Content="Cancel" Width="75" Margin="5,0,0,0" Click="Cancel_Click" />
+            <Button Content="Save" Width="75" Margin="5,0,0,0" Click="Save_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

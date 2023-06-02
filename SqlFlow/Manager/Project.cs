@@ -4,6 +4,8 @@ using SqlFlow.Database;
 
 namespace SqlFlow.Manager;
 
+
+
 public class Project
 {
     public static string Serialize(Project project)
@@ -31,6 +33,14 @@ public class Project
 
     public ILogger? Logger { get; set; }
 
+    private string? _directoryPath;
+
+    public string DirectoryPath
+    {
+        get => _directoryPath ?? AppDomain.CurrentDomain.BaseDirectory;
+        set => _directoryPath = value;
+    }
+
     /// <summary>
     /// Folders where scripts are located. These are set up as cascading folders, so the scripts of the same name
     /// in the later folders will override the scripts in the earlier folders.
@@ -43,7 +53,7 @@ public class Project
         PopulateFromScriptFolders();
     }
 
-    private void PopulateFromScriptFolders()
+    public void PopulateFromScriptFolders()
     {
         Scripts.Clear();
         Subsets.Clear();
@@ -83,7 +93,6 @@ public class Project
         Variables.RemoveWhere(c => c.Value.Scripts.None());
     }
 
-
     [NonSerialized] public readonly List<Script> Scripts = new();
 
     [NonSerialized] public readonly Dictionary<string, Subset> Subsets = new();
@@ -91,4 +100,6 @@ public class Project
     public readonly Dictionary<string, Variable> Variables = new();
 
     public IDatabase Database { get; set; }
+
+    public bool IsDirty { get; set; }
 }

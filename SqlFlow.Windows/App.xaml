@@ -2,8 +2,18 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:SqlFlow"
+             xmlns:views="clr-namespace:SqlFlow.Views"
+             xmlns:viewmodels="clr-namespace:SqlFlow.ViewModels"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <DataTemplate DataType="{x:Type viewmodels:ConfigurationViewModel}">
+            <views:ConfigurationView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:VariableViewModel}">
+            <views:VariableView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:ScriptFolderListViewModel}">
+            <views:ScriptFolderListControl />
+        </DataTemplate>
     </Application.Resources>
 </Application>
